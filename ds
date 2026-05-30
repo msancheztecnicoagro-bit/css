@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestor Financiero Pro</title>
+
+    <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --p: #2563eb;
+            --bg: #f3f4f6;
+            --card: #fff;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        header {
+            background: var(--p);
+            color: #fff;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .container {
+            padding: 20px;
+            max-width: 1600px;
+            margin: auto;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+        }
+        
+        .card {
+            background: var(--card);
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        
+        .big {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--p);
+            color: white;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+        
+        .chartwrap, .tablewrap {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            transition: background-color 0.3s;
+        }
+        
+        /* Variables para el Modo Oscuro */
+        body.dark {
+            --bg: #111827;
+            --card: #1f2937;
+            color: #fff;
+        }
+        
+        canvas {
+            max-height: 350px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>💼 Gestor Financiero Profesional</h1>
+    </header>
+
+    <div class="container">
+        <div class="grid">
+            <div class="card">
+                <div>Balance</div>
+                <div id="balance" class="big">$0</div>
+            </div>
+            <div class="card">
+                <div>Ingresos</div>
+                <div id="ingresos" class="big">$0</div>
+            </div>
+            <div class="card">
+                <div>Gastos</div>
+                <div id="gastos" class="big">$0</div>
+            </div>
+            <div class="card">
+                <div>Ahorro (%)</div>
+                <div id="ahorro" class="big">0%</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button onclick="addRow()">➕ Nuevo Movimiento</button>
+            <button onclick="table.download('xlsx','finanzas.xlsx',{sheetName:'Finanzas'})">📊 Exportar a Excel</button>
+            <button onclick="table.download('csv','finanzas.csv')">📄 Exportar a CSV</button>
+            <button onclick="toggleDark()">🌙 Modo Oscuro</button>
+        </div>
+
+        <div class="tablewrap">
+            <div id="tabla"></div>
+        </div>
+
+        <div class="grid">
+            <div class="chartwrap"><canvas id="bar"></canvas></div>
+            <div class="chartwrap"><canvas id="pie"></canvas></div>
+        </div>
+    </div>
+
+    <script>
+        const storage = "finanzas_pro_v1";
+
+        // Cargar datos de LocalStorage o usar datos por defecto
+        let data = JSON.parse(localStorage.getItem(storage)) || [
+            {
+                fecha: new Date().toISOString().slice(0,10),
+                categoria: "Sueldo",
+                descripcion: "Ingreso inicial",
+                cuenta: "Banco",
+                tipo: "Ingreso",
+                monto: 1500000
+            }
+        ];
+
+        // Inicializar Tabulator
+        const table = new Tabulator("#tabla", {
+            height: "400px",
+            layout: "fitColumns",
+            data: data,
+            columns: [
+                {title: "Fecha", field: "fecha", editor: "input"},
+                {title: "Categoría", field: "categoria", editor: "list", editorParams: {values: ["Sueldo","Comida","Transporte","Servicios","Salud","Ocio","Inversión","Otros"]}},
+                {title: "Descripción", field: "descripcion", editor: "input"},
+                {title: "Cuenta", field: "cuenta", editor: "input"},
+                {title: "Tipo", field: "tipo", editor: "list", editorParams: {values: ["Ingreso","Gasto"]}},
+                {title: "Monto", field: "monto", editor: "number"},
+                {title: "Eliminar", formatter: () => "🗑️", width: 90, hozAlign: "center", cellClick: (e, c) => {
+                    c.getRow().delete();
+                    save();
+                }}
+            ],
+            cellEdited: save
+        });
+
+        // Guardar en LocalStorage y actualizar UI
+        function save() {
+            localStorage.setItem(storage, JSON.stringify(table.getData()));
+            update();
+        }
+
+        // Añadir nueva fila
+        function addRow() {
+            table.addRow({
+                fecha: new Date().toISOString().slice(0,10),
+                categoria: "Otros",
+                descripcion: "",
+                cuenta: "",
+                tipo: "Gasto",
+                monto: 0
+            }, true); // Añadir al principio
+            save();
+        }
+
+        // Formato de moneda
+        function money(v) {
+            return "$" + Number(v).toLocaleString("es-CL");
+        }
+
+        let barChart, pieChart;
+
+        const balanceEl = document.getElementById("balance");
+        const ingresosEl = document.getElementById("ingresos");
+        const gastosEl = document.getElementById("gastos");
+        const ahorroEl = document.getElementById("ahorro");
+
+        // Actualizar métricas y gráficos
+        function update() {
+            const rows = table.getData();
+            let ingresos = 0, gastos = 0;
+            const categorias = {};
+
+            rows.forEach(r => {
+                let m = Number(r.monto) || 0;
+
+                if (r.tipo === "Ingreso") {
+                    ingresos += m;
+                } else {
+                    gastos += m;
+                    categorias[r.categoria] = (categorias[r.categoria] || 0) + m;
+                }
+            });
+
+            let balance = ingresos - gastos;
+            let ahorro = ingresos ? ((balance / ingresos) * 100) : 0;
+
+            balanceEl.textContent = money(balance);
+            ingresosEl.textContent = money(ingresos);
+            gastosEl.textContent = money(gastos);
+            ahorroEl.textContent = ahorro.toFixed(1) + "%";
+
+            // Actualizar Gráfico de Barras
+            if (barChart) barChart.destroy();
+            barChart = new Chart(document.getElementById("bar"), {
+                type: "bar",
+                data: {
+                    labels: ["Ingresos", "Gastos", "Balance"],
+                    datasets: [{
+                        label: 'Monto ($)',
+                        data: [ingresos, gastos, balance],
+                        backgroundColor: ['#10b981', '#ef4444', '#3b82f6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Actualizar Gráfico de Torta
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(document.getElementById("pie"), {
+                type: "pie",
+                data: {
+                    labels: Object.keys(categorias),
+                    datasets: [{
+                        data: Object.values(categorias),
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#64748b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // Alternar modo oscuro
+        function toggleDark() {
+            document.body.classList.toggle("dark");
+        }
+
+        // Llamada inicial
+        update();
+    </script>
+</body>
+</html>
