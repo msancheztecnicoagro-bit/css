@@ -187,7 +187,6 @@
                     field: "categoria", 
                     editor: "list", 
                     editorParams: {
-                        // Se agregó "Ahorro" a la lista de categorías
                         values: ["Sueldo", "Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Inversión", "Ahorro", "Otros"]
                     }
                 },
@@ -246,12 +245,10 @@
                 ingresos += ingresoActual;
                 gastos += gastoActual;
 
-                // Si la categoría seleccionada es "Ahorro", suma el monto
                 if (categoria === "Ahorro") {
                     ahorrosTotal += (ingresoActual + gastoActual);
                 }
 
-                // Agrupa los gastos para el gráfico de torta
                 if (gastoActual > 0) {
                     gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + gastoActual;
                 }
@@ -262,7 +259,6 @@
             document.getElementById("ingresos").innerText = "$" + ingresos.toLocaleString('es-CL');
             document.getElementById("gastos").innerText = "$" + gastos.toLocaleString('es-CL');
             document.getElementById("balance").innerText = "$" + balance.toLocaleString('es-CL');
-            // Muestra el total de ahorros en la tarjeta correspondiente
             document.getElementById("ahorro").innerText = "$" + ahorrosTotal.toLocaleString('es-CL');
 
             actualizarGraficos(ingresos, gastos, gastosPorCategoria);
