@@ -2,76 +2,78 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gestor Financiero Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Financiero Personal</title>
 
     <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
     
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
-            --p: #2563eb;
-            --bg: #f3f4f6;
-            --card: #fff;
+            --bg-light: #f4f6f9;
+            --bg-dark: #121212;
+            --card-light: #fff;
+            --card-dark: #1e1e1e;
+            --text-light: #333;
+            --text-dark: #fff;
         }
-        
+
         body {
+            font-family: Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
             margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: var(--bg);
+            padding: 20px;
             transition: background-color 0.3s, color 0.3s;
         }
-        
-        header {
-            background: var(--p);
-            color: #fff;
-            padding: 16px;
-            text-align: center;
-        }
-        
+
         .container {
-            padding: 20px;
-            max-width: 1600px;
+            max-width: 1400px;
             margin: auto;
         }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 15px;
+
+        h1 {
+            text-align: center;
         }
-        
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
         .card {
-            background: var(--card);
-            padding: 18px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            background: var(--card-light);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.1);
             text-align: center;
             transition: background-color 0.3s;
         }
-        
-        .big {
-            font-size: 1.8rem;
+
+        .value {
+            font-size: 1.6rem;
             font-weight: bold;
             margin-top: 10px;
         }
-        
-        .toolbar {
+
+        .actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin: 15px 0;
+            margin-bottom: 15px;
         }
-        
+
         button {
             padding: 10px 14px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            background-color: var(--p);
+            background-color: #2563eb;
             color: white;
             font-weight: bold;
             transition: opacity 0.2s;
@@ -80,198 +82,234 @@
         button:hover {
             opacity: 0.8;
         }
-        
-        .chartwrap, .tablewrap {
-            background: var(--card);
-            padding: 15px;
-            border-radius: 12px;
-            margin-top: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+
+        #table {
+            background: var(--card-light);
+            border-radius: 8px;
+            overflow: hidden;
             transition: background-color 0.3s;
         }
-        
-        /* Variables para el Modo Oscuro */
-        body.dark {
-            --bg: #111827;
-            --card: #1f2937;
-            color: #fff;
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
-        
-        canvas {
-            max-height: 350px;
+
+        .chart-container {
+            background: var(--card-light);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.1);
+            transition: background-color 0.3s;
+            position: relative;
+            height: 350px;
+        }
+
+        /* --- Modo Oscuro --- */
+        body.dark {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        body.dark .card,
+        body.dark #table,
+        body.dark .chart-container {
+            background: var(--card-dark);
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>💼 Gestor Financiero Profesional</h1>
-    </header>
-
     <div class="container">
-        <div class="grid">
+        <h1>💰 Gestor Financiero Personal</h1>
+
+        <div class="cards">
             <div class="card">
                 <div>Balance</div>
-                <div id="balance" class="big">$0</div>
+                <div class="value" id="balance">$0</div>
             </div>
             <div class="card">
                 <div>Ingresos</div>
-                <div id="ingresos" class="big">$0</div>
+                <div class="value" id="ingresos">$0</div>
             </div>
             <div class="card">
                 <div>Gastos</div>
-                <div id="gastos" class="big">$0</div>
+                <div class="value" id="gastos">$0</div>
             </div>
             <div class="card">
                 <div>Ahorro (%)</div>
-                <div id="ahorro" class="big">0%</div>
+                <div class="value" id="ahorro">0%</div>
             </div>
         </div>
 
-        <div class="toolbar">
-            <button onclick="addRow()">➕ Nuevo Movimiento</button>
-            <button onclick="table.download('xlsx','finanzas.xlsx',{sheetName:'Finanzas'})">📊 Exportar a Excel</button>
-            <button onclick="table.download('csv','finanzas.csv')">📄 Exportar a CSV</button>
-            <button onclick="toggleDark()">🌙 Modo Oscuro</button>
+        <div class="actions">
+            <button onclick="agregarFila()">➕ Agregar fila</button>
+            <button onclick="exportarExcel()">📊 Exportar a Excel</button>
+            <button onclick="exportarCSV()">📄 Exportar a CSV</button>
+            <button onclick="toggleDark()">🌙 Modo oscuro</button>
         </div>
 
-        <div class="tablewrap">
-            <div id="tabla"></div>
-        </div>
+        <div id="table"></div>
 
-        <div class="grid">
-            <div class="chartwrap"><canvas id="bar"></canvas></div>
-            <div class="chartwrap"><canvas id="pie"></canvas></div>
+        <h2>Resumen Visual</h2>
+        <div class="charts-grid">
+            <div class="chart-container">
+                <canvas id="graficoBarras"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="graficoTorta"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
-        const storage = "finanzas_pro_v1";
-
-        // Cargar datos de LocalStorage o usar datos por defecto
-        let data = JSON.parse(localStorage.getItem(storage)) || [
+        let datos = JSON.parse(localStorage.getItem("gastosExcel")) || [
             {
-                fecha: new Date().toISOString().slice(0,10),
+                fecha: new Date().toISOString().split('T')[0],
                 categoria: "Sueldo",
                 descripcion: "Ingreso inicial",
                 cuenta: "Banco",
-                tipo: "Ingreso",
-                monto: 1500000
+                ingreso: 1000000,
+                gasto: 0
             }
         ];
 
-        // Inicializar Tabulator
-        const table = new Tabulator("#tabla", {
+        const table = new Tabulator("#table", {
             height: "400px",
             layout: "fitColumns",
-            data: data,
+            data: datos,
+            reactiveData: true,
             columns: [
                 {title: "Fecha", field: "fecha", editor: "input"},
-                {title: "Categoría", field: "categoria", editor: "list", editorParams: {values: ["Sueldo","Comida","Transporte","Servicios","Salud","Ocio","Inversión","Otros"]}},
+                {
+                    title: "Categoría", 
+                    field: "categoria", 
+                    editor: "list", 
+                    editorParams: {
+                        values: ["Sueldo", "Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Inversión", "Otros"]
+                    }
+                },
                 {title: "Descripción", field: "descripcion", editor: "input"},
                 {title: "Cuenta", field: "cuenta", editor: "input"},
-                {title: "Tipo", field: "tipo", editor: "list", editorParams: {values: ["Ingreso","Gasto"]}},
-                {title: "Monto", field: "monto", editor: "number"},
-                {title: "Eliminar", formatter: () => "🗑️", width: 90, hozAlign: "center", cellClick: (e, c) => {
-                    c.getRow().delete();
-                    save();
-                }}
+                {title: "Ingreso", field: "ingreso", editor: "number"},
+                {title: "Gasto", field: "gasto", editor: "number"},
+                {
+                    title: "Saldo", 
+                    field: "saldo", 
+                    mutator: function(value, data) {
+                        return (Number(data.ingreso) || 0) - (Number(data.gasto) || 0);
+                    }
+                },
+                {
+                    title: "Eliminar", 
+                    width: 90, 
+                    hozAlign: "center",
+                    formatter: function() { return "🗑️"; }, 
+                    cellClick: function(e, cell) {
+                        cell.getRow().delete();
+                        guardar();
+                    }
+                }
             ],
-            cellEdited: save
+            cellEdited: function() { guardar(); }
         });
 
-        // Guardar en LocalStorage y actualizar UI
-        function save() {
-            localStorage.setItem(storage, JSON.stringify(table.getData()));
-            update();
+        function guardar() {
+            localStorage.setItem("gastosExcel", JSON.stringify(table.getData()));
+            actualizar();
         }
 
-        // Añadir nueva fila
-        function addRow() {
+        function agregarFila() {
             table.addRow({
-                fecha: new Date().toISOString().slice(0,10),
+                fecha: new Date().toISOString().split('T')[0],
                 categoria: "Otros",
                 descripcion: "",
                 cuenta: "",
-                tipo: "Gasto",
-                monto: 0
-            }, true); // Añadir al principio
-            save();
+                ingreso: 0,
+                gasto: 0
+            }, true);
+            guardar();
         }
 
-        // Formato de moneda
-        function money(v) {
-            return "$" + Number(v).toLocaleString("es-CL");
-        }
-
-        let barChart, pieChart;
-
-        const balanceEl = document.getElementById("balance");
-        const ingresosEl = document.getElementById("ingresos");
-        const gastosEl = document.getElementById("gastos");
-        const ahorroEl = document.getElementById("ahorro");
-
-        // Actualizar métricas y gráficos
-        function update() {
-            const rows = table.getData();
+        function actualizar() {
+            const data = table.getData();
             let ingresos = 0, gastos = 0;
-            const categorias = {};
+            let gastosPorCategoria = {};
 
-            rows.forEach(r => {
-                let m = Number(r.monto) || 0;
+            data.forEach(r => {
+                let ingresoActual = Number(r.ingreso) || 0;
+                let gastoActual = Number(r.gasto) || 0;
+                let categoria = r.categoria || "Sin categoría";
 
-                if (r.tipo === "Ingreso") {
-                    ingresos += m;
-                } else {
-                    gastos += m;
-                    categorias[r.categoria] = (categorias[r.categoria] || 0) + m;
+                ingresos += ingresoActual;
+                gastos += gastoActual;
+
+                if (gastoActual > 0) {
+                    gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + gastoActual;
                 }
             });
 
             let balance = ingresos - gastos;
-            let ahorro = ingresos ? ((balance / ingresos) * 100) : 0;
+            let porcentajeAhorro = ingresos > 0 ? ((balance / ingresos) * 100) : 0;
 
-            balanceEl.textContent = money(balance);
-            ingresosEl.textContent = money(ingresos);
-            gastosEl.textContent = money(gastos);
-            ahorroEl.textContent = ahorro.toFixed(1) + "%";
+            document.getElementById("ingresos").innerText = "$" + ingresos.toLocaleString('es-CL');
+            document.getElementById("gastos").innerText = "$" + gastos.toLocaleString('es-CL');
+            document.getElementById("balance").innerText = "$" + balance.toLocaleString('es-CL');
+            document.getElementById("ahorro").innerText = porcentajeAhorro.toFixed(1) + "%";
 
-            // Actualizar Gráfico de Barras
-            if (barChart) barChart.destroy();
-            barChart = new Chart(document.getElementById("bar"), {
+            actualizarGraficos(ingresos, gastos, gastosPorCategoria);
+        }
+
+        function exportarCSV() { table.download("csv", "gastos.csv"); }
+        function exportarExcel() { table.download("xlsx", "gastos.xlsx", {sheetName: "Movimientos"}); }
+        function toggleDark() { document.body.classList.toggle("dark"); }
+
+        let chartBarras, chartTorta;
+
+        function actualizarGraficos(ingresos, gastos, categorias) {
+            Chart.defaults.color = document.body.classList.contains('dark') ? '#fff' : '#666';
+
+            const ctxBarras = document.getElementById("graficoBarras");
+            if(chartBarras) chartBarras.destroy();
+            chartBarras = new Chart(ctxBarras, {
                 type: "bar",
                 data: {
-                    labels: ["Ingresos", "Gastos", "Balance"],
+                    labels: ["Ingresos", "Gastos"],
                     datasets: [{
-                        label: 'Monto ($)',
-                        data: [ingresos, gastos, balance],
-                        backgroundColor: ['#10b981', '#ef4444', '#3b82f6']
+                        label: 'Monto Total ($)',
+                        data: [ingresos, gastos],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderRadius: 6
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Flujo de Caja' } } }
             });
 
-            // Actualizar Gráfico de Torta
-            if (pieChart) pieChart.destroy();
-            pieChart = new Chart(document.getElementById("pie"), {
-                type: "pie",
+            const ctxTorta = document.getElementById("graficoTorta");
+            if(chartTorta) chartTorta.destroy();
+            chartTorta = new Chart(ctxTorta, {
+                type: "doughnut",
                 data: {
                     labels: Object.keys(categorias),
                     datasets: [{
                         data: Object.values(categorias),
-                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#64748b']
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b', '#84cc16'],
+                        borderWidth: 1
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Desglose de Gastos' } } }
             });
         }
 
-        // Alternar modo oscuro
-        function toggleDark() {
-            document.body.classList.toggle("dark");
-        }
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') actualizar();
+            });
+        });
+        observer.observe(document.body, { attributes: true });
 
-        // Llamada inicial
-        update();
+        actualizar();
     </script>
 </body>
 </html>
