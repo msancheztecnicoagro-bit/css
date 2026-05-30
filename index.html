@@ -138,8 +138,8 @@
                 <div class="value" id="gastos">$0</div>
             </div>
             <div class="card">
-                <div>Ahorro (%)</div>
-                <div class="value" id="ahorro">0%</div>
+                <div>Ahorro</div>
+                <div class="value" id="ahorro">$0</div>
             </div>
         </div>
 
@@ -187,7 +187,8 @@
                     field: "categoria", 
                     editor: "list", 
                     editorParams: {
-                        values: ["Sueldo", "Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Inversión", "Otros"]
+                        // Se agregó "Ahorro" a la lista de categorías
+                        values: ["Sueldo", "Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Inversión", "Ahorro", "Otros"]
                     }
                 },
                 {title: "Descripción", field: "descripcion", editor: "input"},
@@ -234,7 +235,7 @@
 
         function actualizar() {
             const data = table.getData();
-            let ingresos = 0, gastos = 0;
+            let ingresos = 0, gastos = 0, ahorrosTotal = 0;
             let gastosPorCategoria = {};
 
             data.forEach(r => {
@@ -245,18 +246,24 @@
                 ingresos += ingresoActual;
                 gastos += gastoActual;
 
+                // Si la categoría seleccionada es "Ahorro", suma el monto
+                if (categoria === "Ahorro") {
+                    ahorrosTotal += (ingresoActual + gastoActual);
+                }
+
+                // Agrupa los gastos para el gráfico de torta
                 if (gastoActual > 0) {
                     gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + gastoActual;
                 }
             });
 
             let balance = ingresos - gastos;
-            let porcentajeAhorro = ingresos > 0 ? ((balance / ingresos) * 100) : 0;
 
             document.getElementById("ingresos").innerText = "$" + ingresos.toLocaleString('es-CL');
             document.getElementById("gastos").innerText = "$" + gastos.toLocaleString('es-CL');
             document.getElementById("balance").innerText = "$" + balance.toLocaleString('es-CL');
-            document.getElementById("ahorro").innerText = porcentajeAhorro.toFixed(1) + "%";
+            // Muestra el total de ahorros en la tarjeta correspondiente
+            document.getElementById("ahorro").innerText = "$" + ahorrosTotal.toLocaleString('es-CL');
 
             actualizarGraficos(ingresos, gastos, gastosPorCategoria);
         }
@@ -294,7 +301,7 @@
                     labels: Object.keys(categorias),
                     datasets: [{
                         data: Object.values(categorias),
-                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b', '#84cc16'],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b', '#84cc16', '#22d3ee'],
                         borderWidth: 1
                     }]
                 },
