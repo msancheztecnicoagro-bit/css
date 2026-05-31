@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gastos Familia Cisternas Saavedra</title>
 
-    <!-- Estilos de Tabulator -->
     <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
     
-    <!-- Librerías JS necesarias -->
     <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -225,7 +223,6 @@
         <h1>💰 Gastos Familia Cisternas Saavedra</h1>
 
         <div class="cards">
-            <!-- Nueva tarjeta de saldo anterior -->
             <div class="card">
                 <div class="card-title">Saldo Anterior</div>
                 <div class="value" id="saldo-anterior">$0</div>
@@ -238,12 +235,10 @@
                 <div class="card-title">Gastos Mes</div>
                 <div class="value text-red" id="gastos">$0</div>
             </div>
-            <!-- El Balance Total suma el saldo anterior + movimientos del mes -->
             <div class="card" style="border: 2px solid var(--primary);">
                 <div class="card-title">Balance Total</div>
                 <div class="value text-blue" id="balance">$0</div>
             </div>
-            <!-- El Ahorro Total es acumulativo e histórico -->
             <div class="card">
                 <div class="card-title">Ahorro Total</div>
                 <div class="value text-green" id="ahorro">$0</div>
@@ -319,20 +314,34 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        // Configuración de tu base de datos
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPEjghhG7-7VK0nEP52iT0tTa5HevklLo",
+            authDomain: "gastos-familia-d8adb.firebaseapp.com",
+            projectId: "gastos-familia-d8adb",
+            storageBucket: "gastos-familia-d8adb.firebasestorage.app",
+            messagingSenderId: "999427935937",
+            appId: "1:999427935937:web:e6336e869dac56fde4ce40",
+            measurementId: "G-0P8CE1F2DW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         const categoriasGasto = ["Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Ahorro", "Otros"];
         const categoriasIngreso = ["Sueldo", "Negocio", "Inversión", "Otros Ingresos"];
 
-        let datos = JSON.parse(localStorage.getItem("gastosExcel")) || [];
-
+        // Inicializamos la tabla vacía, se llenará con la Nube
         const table = new Tabulator("#table", {
-            data: datos,
+            data: [],
             layout: "fitColumns",
             responsiveLayout: "collapse",
-            reactiveData: true,
             pagination: "local",
             paginationSize: 10,
-            initialSort:[{column:"fecha", dir:"desc"}],
             columns: [
                 {formatter:"responsiveCollapse", width:30, minWidth:30, hozAlign:"center", resizable:false, headerSort:false},
                 {title: "Fecha", field: "fecha", editor: "date", width: 110},
@@ -345,51 +354,69 @@
                 {
                     title: "Acción", width: 80, hozAlign: "center", headerSort: false,
                     formatter: () => "🗑️",
-                    cellClick: (e, cell) => {
-                        if(confirm("¿Eliminar este registro?")){
-                            cell.getRow().delete();
-                            guardar();
+                    cellClick: async (e, cell) => {
+                        if(confirm("¿Eliminar este registro de la nube?")){
+                            const rowId = cell.getRow().getData().id;
+                            await deleteDoc(doc(db, "movimientos", rowId));
                         }
                     }
                 }
             ],
-            cellEdited: function() { guardar(); }
+            // Si editas una celda directamente en la tabla, actualiza la nube
+            cellEdited: async function(cell) { 
+                const data = cell.getRow().getData();
+                const docRef = doc(db, "movimientos", data.id);
+                await updateDoc(docRef, {
+                    fecha: data.fecha,
+                    categoria: data.categoria,
+                    descripcion: data.descripcion,
+                    cuenta: data.cuenta,
+                    ingreso: Number(data.ingreso) || 0,
+                    gasto: Number(data.gasto) || 0
+                });
+            }
         });
 
-        table.on("dataFiltered", function(filters, rows){
+        table.on("dataFiltered", function(){ actualizarUI(); });
+
+        // --- CONEXIÓN EN TIEMPO REAL CON FIREBASE ---
+        const q = query(collection(db, "movimientos"), orderBy("fecha", "desc"));
+        onSnapshot(q, (snapshot) => {
+            let datosFirebase = [];
+            snapshot.forEach((doc) => {
+                datosFirebase.push({ id: doc.id, ...doc.data() });
+            });
+            table.replaceData(datosFirebase);
             actualizarUI();
+            aplicarFiltroMes(); // Mantiene el filtro aplicado si entra nueva data
         });
 
-        function guardar() {
-            localStorage.setItem("gastosExcel", JSON.stringify(table.getData()));
-            actualizarUI();
-        }
-
-        function aplicarFiltroMes() {
+        // --- Exponer funciones a Window (para que el HTML las reconozca) ---
+        window.aplicarFiltroMes = function() {
             const mesSeleccionado = document.getElementById("mesFiltro").value;
             if (mesSeleccionado) {
                 table.setFilter("fecha", "like", mesSeleccionado);
             } else {
                 table.clearFilter();
             }
-        }
+        };
 
-        function limpiarFiltro() {
+        window.limpiarFiltro = function() {
             document.getElementById("mesFiltro").value = "";
             table.clearFilter();
-        }
+        };
 
-        function abrirModal() {
+        window.abrirModal = function() {
             document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
-            cambiarOpcionesCategoria();
+            window.cambiarOpcionesCategoria();
             document.getElementById('m_monto').value = "";
             document.getElementById('m_descripcion').value = "";
             document.getElementById('modalForm').style.display = "flex";
-        }
+        };
 
-        function cerrarModal() { document.getElementById('modalForm').style.display = "none"; }
+        window.cerrarModal = function() { document.getElementById('modalForm').style.display = "none"; };
 
-        function cambiarOpcionesCategoria() {
+        window.cambiarOpcionesCategoria = function() {
             const tipo = document.getElementById('m_tipo').value;
             const selectCat = document.getElementById('m_categoria');
             selectCat.innerHTML = "";
@@ -399,15 +426,24 @@
                 opt.value = cat; opt.textContent = cat;
                 selectCat.appendChild(opt);
             });
-        }
+        };
 
-        document.getElementById('formMovimiento').addEventListener('submit', function(e) {
+        window.exportarCSV = function() { table.download("csv", "gastos_familia.csv"); };
+        window.exportarExcel = function() { table.download("xlsx", "gastos_familia.xlsx", {sheetName: "Movimientos"}); };
+        
+        window.toggleDark = function() { 
+            document.body.classList.toggle("dark");
+            localStorage.setItem("temaOscuro", document.body.classList.contains("dark"));
+            actualizarUI();
+        };
+
+        // Guardar nuevo registro en la Nube
+        document.getElementById('formMovimiento').addEventListener('submit', async function(e) {
             e.preventDefault();
             const tipo = document.getElementById('m_tipo').value;
             const monto = Number(document.getElementById('m_monto').value);
             
             const nuevoRegistro = {
-                id: Date.now(),
                 fecha: document.getElementById('m_fecha').value,
                 categoria: document.getElementById('m_categoria').value,
                 descripcion: document.getElementById('m_descripcion').value,
@@ -416,45 +452,34 @@
                 gasto: tipo === 'gasto' ? monto : 0
             };
 
-            table.addData([nuevoRegistro], true);
-            guardar();
-            cerrarModal();
+            // Guarda en Firestore (la tabla se actualiza sola gracias a onSnapshot)
+            await addDoc(collection(db, "movimientos"), nuevoRegistro);
+            window.cerrarModal();
         });
 
-        // --- Lógica del Cálculo de Saldo Anterior e Histórico ---
+        // --- Lógica del Cálculo de UI ---
         function actualizarUI() {
-            // Obtenemos TODOS los datos de la tabla, sin importar si están filtrados o no
             const allData = table.getData(); 
-            const mesSeleccionado = document.getElementById("mesFiltro").value; // Ejemplo: "2024-05"
+            const mesSeleccionado = document.getElementById("mesFiltro").value;
             
-            let saldoAnterior = 0;
-            let ahorroAnterior = 0;
-            
-            let ingresosMes = 0;
-            let gastosMes = 0;
-            let ahorroMes = 0;
-            
+            let saldoAnterior = 0; let ahorroAnterior = 0;
+            let ingresosMes = 0; let gastosMes = 0; let ahorroMes = 0;
             let gastosPorCategoria = {};
 
             allData.forEach(r => {
                 let ingreso = Number(r.ingreso) || 0;
                 let gasto = Number(r.gasto) || 0;
                 let categoria = r.categoria || "Otros";
-                let fecha = r.fecha || ""; // Ejemplo: "2024-05-15"
+                let fecha = r.fecha || "";
 
-                let esMesActual = true;
-                let esMesAnterior = false;
+                let esMesActual = true; let esMesAnterior = false;
 
-                // Evaluamos si el registro pertenece al mes filtrado o a un mes del pasado
                 if (mesSeleccionado) {
                     if (fecha.startsWith(mesSeleccionado)) {
                         esMesActual = true;
                     } else if (fecha < mesSeleccionado + "-01") {
-                        // Es de un mes estrictamente anterior al seleccionado
-                        esMesAnterior = true;
-                        esMesActual = false;
+                        esMesAnterior = true; esMesActual = false;
                     } else {
-                        // Es de un mes en el futuro, lo ignoramos de la vista actual
                         esMesActual = false;
                     }
                 }
@@ -476,9 +501,7 @@
                 }
             });
 
-            // Balance total incluye el saldo que se trae arrastrado
             let balanceTotal = saldoAnterior + ingresosMes - gastosMes;
-            // El ahorro total siempre suma toda la historia hasta el mes actual
             let ahorroTotal = ahorroAnterior + ahorroMes;
 
             const formatMoney = (num) => "$" + num.toLocaleString('es-CL');
@@ -531,20 +554,9 @@
             });
         }
 
-        function exportarCSV() { table.download("csv", "gastos_familia.csv"); }
-        function exportarExcel() { table.download("xlsx", "gastos_familia.xlsx", {sheetName: "Movimientos"}); }
-        
-        function toggleDark() { 
-            document.body.classList.toggle("dark");
-            localStorage.setItem("temaOscuro", document.body.classList.contains("dark"));
-            actualizarUI();
-        }
-
+        // --- Inicialización Visual ---
         if(localStorage.getItem("temaOscuro") === "true") document.body.classList.add("dark");
-        
-        // Poner automáticamente el mes actual en el filtro al entrar a la página
         document.getElementById("mesFiltro").value = new Date().toISOString().slice(0, 7);
-        aplicarFiltroMes(); 
         
     </script>
 </body>
