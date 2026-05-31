@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gastos Familia Cisternas Saavedra</title>
 
+    <!-- Estilos de Tabulator -->
     <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
     
+    <!-- Librerías JS necesarias -->
     <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -272,6 +274,7 @@
         </div>
     </div>
 
+    <!-- Modal para agregar registros -->
     <div class="modal-overlay" id="modalForm">
         <div class="modal">
             <h3>Registrar Movimiento</h3>
@@ -315,19 +318,20 @@
         </div>
     </div>
 
+    <!-- Conexión a Firebase -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-        // Configuración de tu base de datos
+        // Configuración de tu nueva base de datos
         const firebaseConfig = {
-            apiKey: "AIzaSyBPEjghhG7-7VK0nEP52iT0tTa5HevklLo",
-            authDomain: "gastos-familia-d8adb.firebaseapp.com",
-            projectId: "gastos-familia-d8adb",
-            storageBucket: "gastos-familia-d8adb.firebasestorage.app",
-            messagingSenderId: "999427935937",
-            appId: "1:999427935937:web:e6336e869dac56fde4ce40",
-            measurementId: "G-0P8CE1F2DW"
+            apiKey: "AIzaSyBCbn1cV9M8FFhZGzc0R2P9juzQapjrpuE",
+            authDomain: "gastos-bdff5.firebaseapp.com",
+            projectId: "gastos-bdff5",
+            storageBucket: "gastos-bdff5.firebasestorage.app",
+            messagingSenderId: "767959649113",
+            appId: "1:767959649113:web:cc52ad8175e715d5405a48",
+            measurementId: "G-PDS83LF0F5"
         };
 
         const app = initializeApp(firebaseConfig);
