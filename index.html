@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gastos Familia Cisternas Saavedra</title>
 
-    <!-- Estilos de Tabulator -->
     <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
     
-    <!-- Librerías JS necesarias -->
     <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,15 +18,19 @@
             --card-light: #fff;
             --card-dark: #1e1e1e;
             --text-light: #333;
-            --text-dark: #fff;
+            --text-dark: #f4f6f9;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --border-light: #ddd;
+            --border-dark: #333;
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
             background: var(--bg-light);
             color: var(--text-light);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -39,75 +41,135 @@
 
         h1 {
             text-align: center;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: 20px;
         }
 
+        /* --- Tarjetas de Resumen --- */
         .cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
 
         .card {
             background: var(--card-light);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,.1);
+            padding: 20px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             text-align: center;
             transition: background-color 0.3s;
+            border: 1px solid var(--border-light);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-bottom: 5px;
         }
 
         .value {
-            font-size: 1.6rem;
-            font-weight: bold;
-            margin-top: 10px;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: 800;
         }
 
+        /* --- Botones --- */
         .actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
         }
 
         button {
-            padding: 10px 14px;
+            padding: 12px 18px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            background-color: #2563eb;
+            background-color: var(--primary);
             color: white;
             font-weight: bold;
-            transition: opacity 0.2s;
+            font-size: 0.95rem;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
 
-        button:hover {
-            opacity: 0.8;
-        }
+        button:hover { background-color: var(--primary-hover); }
+        button:active { transform: scale(0.98); }
+        
+        .btn-secondary { background-color: #4b5563; }
+        .btn-secondary:hover { background-color: #374151; }
 
+        /* --- Tabla y Gráficos --- */
         #table {
             background: var(--card-light);
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            transition: background-color 0.3s;
+            border: 1px solid var(--border-light);
+            margin-bottom: 30px;
         }
 
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
             margin-top: 15px;
         }
 
         .chart-container {
             background: var(--card-light);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,.1);
-            transition: background-color 0.3s;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-light);
             position: relative;
             height: 350px;
         }
+
+        /* --- Modal (Formulario para celular y PC) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+
+        .modal {
+            background: var(--card-light);
+            padding: 25px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal h3 { margin-top: 0; margin-bottom: 20px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
         /* --- Modo Oscuro --- */
         body.dark {
@@ -115,11 +177,14 @@
             color: var(--text-dark);
         }
 
-        body.dark .card,
-        body.dark #table,
-        body.dark .chart-container {
+        body.dark .card, body.dark #table, body.dark .chart-container, body.dark .modal, body.dark input, body.dark select {
             background: var(--card-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
         }
+        
+        body.dark .card-title { color: #aaa; }
+        body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
     </style>
 </head>
 <body>
@@ -128,33 +193,33 @@
 
         <div class="cards">
             <div class="card">
-                <div>Balance</div>
+                <div class="card-title">Balance</div>
                 <div class="value" id="balance">$0</div>
             </div>
             <div class="card">
-                <div>Ingresos</div>
+                <div class="card-title">Ingresos</div>
                 <div class="value" id="ingresos">$0</div>
             </div>
             <div class="card">
-                <div>Gastos</div>
+                <div class="card-title">Gastos</div>
                 <div class="value" id="gastos">$0</div>
             </div>
             <div class="card">
-                <div>Ahorro</div>
+                <div class="card-title">Ahorro</div>
                 <div class="value" id="ahorro">$0</div>
             </div>
         </div>
 
         <div class="actions">
-            <button onclick="agregarFila()">➕ Agregar fila</button>
-            <button onclick="exportarExcel()">📊 Exportar a Excel</button>
-            <button onclick="exportarCSV()">📄 Exportar a CSV</button>
-            <button onclick="toggleDark()">🌙 Modo oscuro</button>
+            <button onclick="abrirModal()">➕ Nuevo Movimiento</button>
+            <button class="btn-secondary" onclick="exportarExcel()">📊 Excel</button>
+            <button class="btn-secondary" onclick="exportarCSV()">📄 CSV</button>
+            <button class="btn-secondary" onclick="toggleDark()">🌙 Tema</button>
         </div>
 
         <div id="table"></div>
 
-        <h2>Resumen Visual</h2>
+        <h2 style="text-align: center; margin-top: 40px;">Resumen Visual</h2>
         <div class="charts-grid">
             <div class="chart-container">
                 <canvas id="graficoBarras"></canvas>
@@ -165,52 +230,84 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modalForm">
+        <div class="modal">
+            <h3>Registrar Movimiento</h3>
+            <form id="formMovimiento">
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" id="m_fecha" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="m_tipo" onchange="cambiarOpcionesCategoria()" required>
+                        <option value="gasto">Gasto</option>
+                        <option value="ingreso">Ingreso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="m_categoria" required>
+                        </select>
+                </div>
+                <div class="form-group">
+                    <label>Monto ($)</label>
+                    <input type="number" id="m_monto" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="m_descripcion" placeholder="Ej: Compra supermercado" required>
+                </div>
+                <div class="form-group">
+                    <label>Cuenta</label>
+                    <select id="m_cuenta" required>
+                        <option value="Banco">Banco</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        const categoriasGasto = ["Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Ahorro", "Otros"];
+        const categoriasIngreso = ["Sueldo", "Negocio", "Inversión", "Otros Ingresos"];
+
+        // Recuperar datos
         let datos = JSON.parse(localStorage.getItem("gastosExcel")) || [
-            {
-                fecha: new Date().toISOString().split('T')[0],
-                categoria: "Sueldo",
-                descripcion: "Ingreso inicial",
-                cuenta: "Banco",
-                ingreso: 1000000,
-                gasto: 0
-            }
+            { id: 1, fecha: new Date().toISOString().split('T')[0], categoria: "Sueldo", descripcion: "Ingreso inicial", cuenta: "Banco", ingreso: 1000000, gasto: 0 }
         ];
 
+        // Configuración de Tabulator con responsiveLayout para móviles
         const table = new Tabulator("#table", {
-            height: "400px",
-            layout: "fitColumns",
             data: datos,
+            layout: "fitColumns",
+            responsiveLayout: "collapse", // Oculta columnas en celular
             reactiveData: true,
+            pagination: "local",
+            paginationSize: 10,
             columns: [
-                {title: "Fecha", field: "fecha", editor: "input"},
-                {
-                    title: "Categoría", 
-                    field: "categoria", 
-                    editor: "list", 
-                    editorParams: {
-                        values: ["Sueldo", "Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Inversión", "Ahorro", "Otros"]
-                    }
-                },
+                {formatter:"responsiveCollapse", width:30, minWidth:30, hozAlign:"center", resizable:false, headerSort:false},
+                {title: "Fecha", field: "fecha", editor: "date", width: 110},
+                {title: "Categoría", field: "categoria"},
                 {title: "Descripción", field: "descripcion", editor: "input"},
-                {title: "Cuenta", field: "cuenta", editor: "input"},
-                {title: "Ingreso", field: "ingreso", editor: "number"},
-                {title: "Gasto", field: "gasto", editor: "number"},
+                {title: "Cuenta", field: "cuenta"},
+                {title: "Ingreso", field: "ingreso", editor: "number", formatter: "money", formatterParams: {symbol: "$", precision: 0}},
+                {title: "Gasto", field: "gasto", editor: "number", formatter: "money", formatterParams: {symbol: "$", precision: 0}},
+                {title: "Saldo", field: "saldo", mutator: (value, data) => (Number(data.ingreso) || 0) - (Number(data.gasto) || 0), formatter: "money", formatterParams: {symbol: "$", precision: 0}},
                 {
-                    title: "Saldo", 
-                    field: "saldo", 
-                    mutator: function(value, data) {
-                        return (Number(data.ingreso) || 0) - (Number(data.gasto) || 0);
-                    }
-                },
-                {
-                    title: "Eliminar", 
-                    width: 90, 
-                    hozAlign: "center",
-                    formatter: function() { return "🗑️"; }, 
-                    cellClick: function(e, cell) {
-                        cell.getRow().delete();
-                        guardar();
+                    title: "Acción", width: 80, hozAlign: "center", headerSort: false,
+                    formatter: () => "🗑️",
+                    cellClick: (e, cell) => {
+                        if(confirm("¿Eliminar este registro?")){
+                            cell.getRow().delete();
+                            guardar();
+                        }
                     }
                 }
             ],
@@ -222,18 +319,53 @@
             actualizar();
         }
 
-        function agregarFila() {
-            table.addRow({
-                fecha: new Date().toISOString().split('T')[0],
-                categoria: "Otros",
-                descripcion: "",
-                cuenta: "",
-                ingreso: 0,
-                gasto: 0
-            }, true);
-            guardar();
+        // --- Lógica del Modal (Formulario Móvil/PC) ---
+        function abrirModal() {
+            document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
+            cambiarOpcionesCategoria();
+            document.getElementById('m_monto').value = "";
+            document.getElementById('m_descripcion').value = "";
+            document.getElementById('modalForm').style.display = "flex";
         }
 
+        function cerrarModal() {
+            document.getElementById('modalForm').style.display = "none";
+        }
+
+        function cambiarOpcionesCategoria() {
+            const tipo = document.getElementById('m_tipo').value;
+            const selectCat = document.getElementById('m_categoria');
+            selectCat.innerHTML = "";
+            const opciones = tipo === 'gasto' ? categoriasGasto : categoriasIngreso;
+            
+            opciones.forEach(cat => {
+                let opt = document.createElement('option');
+                opt.value = cat; opt.textContent = cat;
+                selectCat.appendChild(opt);
+            });
+        }
+
+        document.getElementById('formMovimiento').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const tipo = document.getElementById('m_tipo').value;
+            const monto = Number(document.getElementById('m_monto').value);
+            
+            const nuevoRegistro = {
+                id: Date.now(),
+                fecha: document.getElementById('m_fecha').value,
+                categoria: document.getElementById('m_categoria').value,
+                descripcion: document.getElementById('m_descripcion').value,
+                cuenta: document.getElementById('m_cuenta').value,
+                ingreso: tipo === 'ingreso' ? monto : 0,
+                gasto: tipo === 'gasto' ? monto : 0
+            };
+
+            table.addData([nuevoRegistro], true); // Agrega al principio
+            guardar();
+            cerrarModal();
+        });
+
+        // --- Lógica de Actualización y Gráficos ---
         function actualizar() {
             const data = table.getData();
             let ingresos = 0, gastos = 0, ahorrosTotal = 0;
@@ -242,38 +374,34 @@
             data.forEach(r => {
                 let ingresoActual = Number(r.ingreso) || 0;
                 let gastoActual = Number(r.gasto) || 0;
-                let categoria = r.categoria || "Sin categoría";
+                let categoria = r.categoria || "Otros";
 
                 ingresos += ingresoActual;
                 gastos += gastoActual;
 
-                if (categoria === "Ahorro") {
-                    ahorrosTotal += (ingresoActual + gastoActual);
-                }
+                if (categoria === "Ahorro") ahorrosTotal += (ingresoActual + gastoActual);
 
-                if (gastoActual > 0) {
+                if (gastoActual > 0 && categoria !== "Ahorro") {
                     gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + gastoActual;
                 }
             });
 
             let balance = ingresos - gastos;
 
-            document.getElementById("ingresos").innerText = "$" + ingresos.toLocaleString('es-CL');
-            document.getElementById("gastos").innerText = "$" + gastos.toLocaleString('es-CL');
-            document.getElementById("balance").innerText = "$" + balance.toLocaleString('es-CL');
-            document.getElementById("ahorro").innerText = "$" + ahorrosTotal.toLocaleString('es-CL');
+            const formatMoney = (num) => "$" + num.toLocaleString('es-CL');
+            document.getElementById("ingresos").innerText = formatMoney(ingresos);
+            document.getElementById("gastos").innerText = formatMoney(gastos);
+            document.getElementById("balance").innerText = formatMoney(balance);
+            document.getElementById("ahorro").innerText = formatMoney(ahorrosTotal);
 
             actualizarGraficos(ingresos, gastos, gastosPorCategoria);
         }
 
-        function exportarCSV() { table.download("csv", "gastos.csv"); }
-        function exportarExcel() { table.download("xlsx", "gastos.xlsx", {sheetName: "Movimientos"}); }
-        function toggleDark() { document.body.classList.toggle("dark"); }
-
         let chartBarras, chartTorta;
 
         function actualizarGraficos(ingresos, gastos, categorias) {
-            Chart.defaults.color = document.body.classList.contains('dark') ? '#fff' : '#666';
+            const isDark = document.body.classList.contains('dark');
+            Chart.defaults.color = isDark ? '#e5e7eb' : '#4b5563';
 
             const ctxBarras = document.getElementById("graficoBarras");
             if(chartBarras) chartBarras.destroy();
@@ -282,13 +410,13 @@
                 data: {
                     labels: ["Ingresos", "Gastos"],
                     datasets: [{
-                        label: 'Monto Total ($)',
+                        label: 'Monto Total',
                         data: [ingresos, gastos],
                         backgroundColor: ['#10b981', '#ef4444'],
-                        borderRadius: 6
+                        borderRadius: 8
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Flujo de Caja' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false}, title: { display: true, text: 'Flujo de Caja' } } }
             });
 
             const ctxTorta = document.getElementById("graficoTorta");
@@ -299,20 +427,26 @@
                     labels: Object.keys(categorias),
                     datasets: [{
                         data: Object.values(categorias),
-                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#64748b', '#84cc16', '#22d3ee'],
-                        borderWidth: 1
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16'],
+                        borderWidth: isDark ? 0 : 2,
+                        borderColor: isDark ? '#1e1e1e' : '#fff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Desglose de Gastos' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Desglose de Gastos (Excluye Ahorro)' } } }
             });
         }
 
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'class') actualizar();
-            });
-        });
-        observer.observe(document.body, { attributes: true });
+        function exportarCSV() { table.download("csv", "gastos_familia.csv"); }
+        function exportarExcel() { table.download("xlsx", "gastos_familia.xlsx", {sheetName: "Movimientos"}); }
+        
+        function toggleDark() { 
+            document.body.classList.toggle("dark");
+            localStorage.setItem("temaOscuro", document.body.classList.contains("dark"));
+            actualizar(); // Recargar colores de gráficos
+        }
+
+        // Cargar tema guardado
+        if(localStorage.getItem("temaOscuro") === "true") document.body.classList.add("dark");
 
         actualizar();
     </script>
