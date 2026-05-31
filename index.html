@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gastos Familia Cisternas Saavedra</title>
 
-    <!-- Estilos de Tabulator -->
     <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
     
-    <!-- Librerías JS necesarias -->
     <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -274,7 +272,6 @@
         </div>
     </div>
 
-    <!-- Modal para agregar registros -->
     <div class="modal-overlay" id="modalForm">
         <div class="modal">
             <h3>Registrar Movimiento</h3>
@@ -318,7 +315,6 @@
         </div>
     </div>
 
-    <!-- Conexión a Firebase (Módulos) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
