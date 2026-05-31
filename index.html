@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gastos Familia Cisternas Saavedra</title>
 
+    <!-- Estilos de Tabulator -->
     <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet">
     
+    <!-- Librerías JS necesarias -->
     <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -48,14 +50,14 @@
         /* --- Tarjetas de Resumen --- */
         .cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
 
         .card {
             background: var(--card-light);
-            padding: 20px 15px;
+            padding: 20px 10px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             text-align: center;
@@ -64,16 +66,51 @@
         }
 
         .card-title {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: bold;
         }
 
         .value {
-            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-size: clamp(1.1rem, 2.5vw, 1.6rem);
             font-weight: 800;
+        }
+
+        .text-blue { color: #2563eb; }
+        .text-green { color: #10b981; }
+        .text-red { color: #ef4444; }
+
+        body.dark .text-blue { color: #60a5fa; }
+        body.dark .text-green { color: #34d399; }
+        body.dark .text-red { color: #f87171; }
+
+        /* --- Barra de Filtro --- */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: var(--card-light);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-light);
+        }
+
+        .filter-bar label { font-weight: bold; }
+        .filter-bar input[type="month"] {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-light);
+            color: var(--text-light);
+            font-size: 1rem;
+            font-family: inherit;
         }
 
         /* --- Botones --- */
@@ -104,8 +141,10 @@
         button:hover { background-color: var(--primary-hover); }
         button:active { transform: scale(0.98); }
         
-        .btn-secondary { background-color: #4b5563; }
+        .btn-secondary { background-color: #4b5563; box-shadow: none; }
         .btn-secondary:hover { background-color: #374151; }
+        .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background-color: var(--primary); color: white; }
 
         /* --- Tabla y Gráficos --- */
         #table {
@@ -133,7 +172,7 @@
             height: 350px;
         }
 
-        /* --- Modal (Formulario para celular y PC) --- */
+        /* --- Modal --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -155,7 +194,6 @@
         }
 
         .modal h3 { margin-top: 0; margin-bottom: 20px; }
-
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
         .form-group input, .form-group select {
@@ -168,23 +206,18 @@
             background: var(--bg-light);
             color: var(--text-light);
         }
-
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
         /* --- Modo Oscuro --- */
-        body.dark {
-            background: var(--bg-dark);
-            color: var(--text-dark);
+        body.dark { background: var(--bg-dark); color: var(--text-dark); }
+        body.dark .card, body.dark #table, body.dark .chart-container, body.dark .modal, 
+        body.dark input, body.dark select, body.dark .filter-bar {
+            background: var(--card-dark); border-color: var(--border-dark); color: var(--text-dark);
         }
-
-        body.dark .card, body.dark #table, body.dark .chart-container, body.dark .modal, body.dark input, body.dark select {
-            background: var(--card-dark);
-            border-color: var(--border-dark);
-            color: var(--text-dark);
-        }
-        
         body.dark .card-title { color: #aaa; }
         body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
+        body.dark .btn-outline { border-color: #60a5fa; color: #60a5fa; }
+        body.dark .btn-outline:hover { background-color: #60a5fa; color: #121212; }
     </style>
 </head>
 <body>
@@ -192,22 +225,35 @@
         <h1>💰 Gastos Familia Cisternas Saavedra</h1>
 
         <div class="cards">
+            <!-- Nueva tarjeta de saldo anterior -->
             <div class="card">
-                <div class="card-title">Balance</div>
-                <div class="value" id="balance">$0</div>
+                <div class="card-title">Saldo Anterior</div>
+                <div class="value" id="saldo-anterior">$0</div>
             </div>
             <div class="card">
-                <div class="card-title">Ingresos</div>
-                <div class="value" id="ingresos">$0</div>
+                <div class="card-title">Ingresos Mes</div>
+                <div class="value text-green" id="ingresos">$0</div>
             </div>
             <div class="card">
-                <div class="card-title">Gastos</div>
-                <div class="value" id="gastos">$0</div>
+                <div class="card-title">Gastos Mes</div>
+                <div class="value text-red" id="gastos">$0</div>
             </div>
+            <!-- El Balance Total suma el saldo anterior + movimientos del mes -->
+            <div class="card" style="border: 2px solid var(--primary);">
+                <div class="card-title">Balance Total</div>
+                <div class="value text-blue" id="balance">$0</div>
+            </div>
+            <!-- El Ahorro Total es acumulativo e histórico -->
             <div class="card">
-                <div class="card-title">Ahorro</div>
-                <div class="value" id="ahorro">$0</div>
+                <div class="card-title">Ahorro Total</div>
+                <div class="value text-green" id="ahorro">$0</div>
             </div>
+        </div>
+
+        <div class="filter-bar">
+            <label for="mesFiltro">📅 Filtrar y Reiniciar por Mes:</label>
+            <input type="month" id="mesFiltro" onchange="aplicarFiltroMes()">
+            <button class="btn-outline" onclick="limpiarFiltro()">Ver Todos</button>
         </div>
 
         <div class="actions">
@@ -219,7 +265,7 @@
 
         <div id="table"></div>
 
-        <h2 style="text-align: center; margin-top: 40px;">Resumen Visual</h2>
+        <h2 style="text-align: center; margin-top: 40px;">Resumen del Mes Visual</h2>
         <div class="charts-grid">
             <div class="chart-container">
                 <canvas id="graficoBarras"></canvas>
@@ -247,8 +293,7 @@
                 </div>
                 <div class="form-group">
                     <label>Categoría</label>
-                    <select id="m_categoria" required>
-                        </select>
+                    <select id="m_categoria" required></select>
                 </div>
                 <div class="form-group">
                     <label>Monto ($)</label>
@@ -278,19 +323,16 @@
         const categoriasGasto = ["Alimentación", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Educación", "Ahorro", "Otros"];
         const categoriasIngreso = ["Sueldo", "Negocio", "Inversión", "Otros Ingresos"];
 
-        // Recuperar datos
-        let datos = JSON.parse(localStorage.getItem("gastosExcel")) || [
-            { id: 1, fecha: new Date().toISOString().split('T')[0], categoria: "Sueldo", descripcion: "Ingreso inicial", cuenta: "Banco", ingreso: 1000000, gasto: 0 }
-        ];
+        let datos = JSON.parse(localStorage.getItem("gastosExcel")) || [];
 
-        // Configuración de Tabulator con responsiveLayout para móviles
         const table = new Tabulator("#table", {
             data: datos,
             layout: "fitColumns",
-            responsiveLayout: "collapse", // Oculta columnas en celular
+            responsiveLayout: "collapse",
             reactiveData: true,
             pagination: "local",
             paginationSize: 10,
+            initialSort:[{column:"fecha", dir:"desc"}],
             columns: [
                 {formatter:"responsiveCollapse", width:30, minWidth:30, hozAlign:"center", resizable:false, headerSort:false},
                 {title: "Fecha", field: "fecha", editor: "date", width: 110},
@@ -314,12 +356,29 @@
             cellEdited: function() { guardar(); }
         });
 
+        table.on("dataFiltered", function(filters, rows){
+            actualizarUI();
+        });
+
         function guardar() {
             localStorage.setItem("gastosExcel", JSON.stringify(table.getData()));
-            actualizar();
+            actualizarUI();
         }
 
-        // --- Lógica del Modal (Formulario Móvil/PC) ---
+        function aplicarFiltroMes() {
+            const mesSeleccionado = document.getElementById("mesFiltro").value;
+            if (mesSeleccionado) {
+                table.setFilter("fecha", "like", mesSeleccionado);
+            } else {
+                table.clearFilter();
+            }
+        }
+
+        function limpiarFiltro() {
+            document.getElementById("mesFiltro").value = "";
+            table.clearFilter();
+        }
+
         function abrirModal() {
             document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
             cambiarOpcionesCategoria();
@@ -328,16 +387,13 @@
             document.getElementById('modalForm').style.display = "flex";
         }
 
-        function cerrarModal() {
-            document.getElementById('modalForm').style.display = "none";
-        }
+        function cerrarModal() { document.getElementById('modalForm').style.display = "none"; }
 
         function cambiarOpcionesCategoria() {
             const tipo = document.getElementById('m_tipo').value;
             const selectCat = document.getElementById('m_categoria');
             selectCat.innerHTML = "";
             const opciones = tipo === 'gasto' ? categoriasGasto : categoriasIngreso;
-            
             opciones.forEach(cat => {
                 let opt = document.createElement('option');
                 opt.value = cat; opt.textContent = cat;
@@ -360,41 +416,80 @@
                 gasto: tipo === 'gasto' ? monto : 0
             };
 
-            table.addData([nuevoRegistro], true); // Agrega al principio
+            table.addData([nuevoRegistro], true);
             guardar();
             cerrarModal();
         });
 
-        // --- Lógica de Actualización y Gráficos ---
-        function actualizar() {
-            const data = table.getData();
-            let ingresos = 0, gastos = 0, ahorrosTotal = 0;
+        // --- Lógica del Cálculo de Saldo Anterior e Histórico ---
+        function actualizarUI() {
+            // Obtenemos TODOS los datos de la tabla, sin importar si están filtrados o no
+            const allData = table.getData(); 
+            const mesSeleccionado = document.getElementById("mesFiltro").value; // Ejemplo: "2024-05"
+            
+            let saldoAnterior = 0;
+            let ahorroAnterior = 0;
+            
+            let ingresosMes = 0;
+            let gastosMes = 0;
+            let ahorroMes = 0;
+            
             let gastosPorCategoria = {};
 
-            data.forEach(r => {
-                let ingresoActual = Number(r.ingreso) || 0;
-                let gastoActual = Number(r.gasto) || 0;
+            allData.forEach(r => {
+                let ingreso = Number(r.ingreso) || 0;
+                let gasto = Number(r.gasto) || 0;
                 let categoria = r.categoria || "Otros";
+                let fecha = r.fecha || ""; // Ejemplo: "2024-05-15"
 
-                ingresos += ingresoActual;
-                gastos += gastoActual;
+                let esMesActual = true;
+                let esMesAnterior = false;
 
-                if (categoria === "Ahorro") ahorrosTotal += (ingresoActual + gastoActual);
+                // Evaluamos si el registro pertenece al mes filtrado o a un mes del pasado
+                if (mesSeleccionado) {
+                    if (fecha.startsWith(mesSeleccionado)) {
+                        esMesActual = true;
+                    } else if (fecha < mesSeleccionado + "-01") {
+                        // Es de un mes estrictamente anterior al seleccionado
+                        esMesAnterior = true;
+                        esMesActual = false;
+                    } else {
+                        // Es de un mes en el futuro, lo ignoramos de la vista actual
+                        esMesActual = false;
+                    }
+                }
 
-                if (gastoActual > 0 && categoria !== "Ahorro") {
-                    gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + gastoActual;
+                if (esMesAnterior) {
+                    saldoAnterior += (ingreso - gasto);
+                    if (categoria === "Ahorro") ahorroAnterior += (ingreso + gasto);
+                }
+
+                if (esMesActual) {
+                    ingresosMes += ingreso;
+                    gastosMes += gasto;
+                    
+                    if (categoria === "Ahorro") ahorroMes += (ingreso + gasto);
+                    
+                    if (gasto > 0 && categoria !== "Ahorro") {
+                        gastosPorCategoria[categoria] = (gastosPorCategoria[categoria] || 0) + gasto;
+                    }
                 }
             });
 
-            let balance = ingresos - gastos;
+            // Balance total incluye el saldo que se trae arrastrado
+            let balanceTotal = saldoAnterior + ingresosMes - gastosMes;
+            // El ahorro total siempre suma toda la historia hasta el mes actual
+            let ahorroTotal = ahorroAnterior + ahorroMes;
 
             const formatMoney = (num) => "$" + num.toLocaleString('es-CL');
-            document.getElementById("ingresos").innerText = formatMoney(ingresos);
-            document.getElementById("gastos").innerText = formatMoney(gastos);
-            document.getElementById("balance").innerText = formatMoney(balance);
-            document.getElementById("ahorro").innerText = formatMoney(ahorrosTotal);
+            
+            document.getElementById("saldo-anterior").innerText = formatMoney(saldoAnterior);
+            document.getElementById("ingresos").innerText = formatMoney(ingresosMes);
+            document.getElementById("gastos").innerText = formatMoney(gastosMes);
+            document.getElementById("balance").innerText = formatMoney(balanceTotal);
+            document.getElementById("ahorro").innerText = formatMoney(ahorroTotal);
 
-            actualizarGraficos(ingresos, gastos, gastosPorCategoria);
+            actualizarGraficos(ingresosMes, gastosMes, gastosPorCategoria);
         }
 
         let chartBarras, chartTorta;
@@ -410,13 +505,13 @@
                 data: {
                     labels: ["Ingresos", "Gastos"],
                     datasets: [{
-                        label: 'Monto Total',
+                        label: 'Monto del Mes',
                         data: [ingresos, gastos],
                         backgroundColor: ['#10b981', '#ef4444'],
                         borderRadius: 8
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false}, title: { display: true, text: 'Flujo de Caja' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display: false}, title: { display: true, text: 'Flujo de Caja del Periodo' } } }
             });
 
             const ctxTorta = document.getElementById("graficoTorta");
@@ -432,7 +527,7 @@
                         borderColor: isDark ? '#1e1e1e' : '#fff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Desglose de Gastos (Excluye Ahorro)' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Desglose de Gastos del Mes' } } }
             });
         }
 
@@ -442,13 +537,15 @@
         function toggleDark() { 
             document.body.classList.toggle("dark");
             localStorage.setItem("temaOscuro", document.body.classList.contains("dark"));
-            actualizar(); // Recargar colores de gráficos
+            actualizarUI();
         }
 
-        // Cargar tema guardado
         if(localStorage.getItem("temaOscuro") === "true") document.body.classList.add("dark");
-
-        actualizar();
+        
+        // Poner automáticamente el mes actual en el filtro al entrar a la página
+        document.getElementById("mesFiltro").value = new Date().toISOString().slice(0, 7);
+        aplicarFiltroMes(); 
+        
     </script>
 </body>
 </html>
